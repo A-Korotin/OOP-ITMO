@@ -1,37 +1,54 @@
-﻿using Xunit;
-using Xunit.Sdk;
+﻿using OOP_ICT.Domain;
+using OOP_ICT.Domain.Interfaces;
+using OOP_ICT.Exceptions;
+using OOP_ICT.Services;
+using OOP_ICT.Services.Impl;
+using Xunit;
 
 namespace OOP_ICT.Dealer.Tests;
 
 public class Tests
 {
-    // TODO: Обратите внимание, что для коллекций и проверок есть разные виды Assert
+    private static IDeckService _deckService = new ClassicDeckService();
+    private static IDealer _dealer = new Domain.Dealer(_deckService);
+    
     [Fact]
-    public void CheckTestIsWorking_CorrectBuild()
+    public void CheckCardAmount()
     {
-        Assert.True(true);
+        _dealer.RecreateDeck();
+        var deck = _dealer.GetMixedDeck();
+        Assert.Equal(_deckService.GetDefaultDeckSize(), deck.Count());
     }
 
     [Fact]
-    public void CollectionsAreEquals_True()
+    public void CheckCardTossing_AssertEmptyDeck_ThenRecreateDeck()
     {
-        var firstCollection = new List<int>(){1,2,3};
-        var secondCollection = new List<int>(){1,2,3};
-        Assert.Equal(firstCollection, secondCollection);
+        _dealer.RecreateDeck();
+        
+        for (var i = 0;  i < _deckService.GetDefaultDeckSize(); ++i)
+        {
+            _dealer.TossNextCard();
+        }
+
+        Assert.Throws<InvalidDeckException>(() => _dealer.TossNextCard()); // deck is empty
+        
+        _dealer.RecreateDeck();
+        
+        Assert.Equal(_deckService.GetDefaultDeckSize(), _dealer.GetMixedDeck().Count());
     }
     
     [Fact]
-    public void ValueContainsInCollection_True()
+    public void CheckIfDeckIsMixed()
     {
-        var value = 2;
-        var collection = new List<int>(){1,2,3};
-        Assert.Contains(value, collection);
+        _dealer.RecreateDeck();
+        var deck = _dealer.GetMixedDeck();
+        var cards = new Card[_deckService.GetDefaultDeckSize()];
+        for (var i = 0; i < _deckService.GetDefaultDeckSize(); ++i)
+        {
+            cards[i] = deck.GetNextCard();
+        }
+        
+        Assert.NotEqual(_deckService.GetDefaultCards().ToArray(), cards);
     }
-
-    [Fact]
-    public void CheckForNullException_AssertNullRef()
-    {
-        var collection = new List<string>() { "я", "люблю", "ооп" };
-        Assert.Throws<InvalidOperationException>(() => collection.First(x => x == null));
-    }
+    
 }
